@@ -70,7 +70,7 @@ select,input{font:inherit;padding:12px;border-radius:12px;border:0;width:100%;co
 /* ====== KONFIGURACJA Metered ====== */
 // dashboard.metered.ca -> Realtime Messaging -> Keys -> Create key -> typ "Publishable".
 // Przy tworzeniu klucza zaznacz "Send" (domyślnie wyłączone) - inaczej gracze się połączą, ale wiadomości nie polecą.
-const PK_KEY = "7siMZQpFVjiHdnzd4PNd8qIkJMq7ivWPKKF6Bn8zpBeJeX-4";
+const PK_KEY = "pk_live_931ddf8eb36995d5576d8789ba31b7d3cf29d532";
 
 const C="al|Albania|3,ad|Andora|3,at|Austria|1,by|Białoruś|2,be|Belgia|1,ba|Bośnia i Hercegowina|3,bg|Bułgaria|2,hr|Chorwacja|1,cy|Cypr|3,cz|Czechy|1,dk|Dania|1,ee|Estonia|2,fi|Finlandia|1,fr|Francja|1,gr|Grecja|1,es|Hiszpania|1,nl|Holandia|1,ie|Irlandia|1,is|Islandia|2,li|Liechtenstein|3,lt|Litwa|2,lu|Luksemburg|2,lv|Łotwa|2,mk|Macedonia Północna|3,mt|Malta|3,md|Mołdawia|3,mc|Monako|3,me|Czarnogóra|3,de|Niemcy|1,no|Norwegia|1,pl|Polska|1,pt|Portugalia|1,ru|Rosja|1,ro|Rumunia|2,sm|San Marino|3,rs|Serbia|2,sk|Słowacja|1,si|Słowenia|2,ch|Szwajcaria|1,se|Szwecja|1,ua|Ukraina|1,va|Watykan|3,hu|Węgry|1,gb|Wielka Brytania|1,it|Włochy|1,xk|Kosowo|3".split(',').map(s=>{const[c,n,d]=s.split('|');return{c,n,d:+d}});
 const $=id=>document.getElementById(id),byC=c=>C.find(x=>x.c==c);
