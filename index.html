@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flagi Europy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;600&display=swap">
+<style>
+:root{--bg:#16227a;--bg2:#0d1450;--card:#fff;--ink:#141a4a;--sun:#ffd23f;--ok:#22b573;--bad:#e5484d;--mut:#8b93c9}
+*{box-sizing:border-box;margin:0}
+body{font:16px/1.4 'DM Sans',system-ui,sans-serif;color:#fff;min-height:100vh;background:radial-gradient(circle at 20% 0,#2b3bc4 0,var(--bg) 40%,var(--bg2) 100%);display:flex;justify-content:center;padding:20px}
+#app{width:100%;max-width:560px}
+h1,h2,.big,.cn{font-family:'Bricolage Grotesque',sans-serif;font-weight:800}
+h1{font-size:clamp(2.4rem,9vw,3.6rem);line-height:1;margin:18px 0 6px}
+h1 span{display:inline-block;background:var(--sun);color:var(--ink);padding:0 .25em;transform:rotate(-2deg)}
+h2{font-size:1.8rem;margin-bottom:10px}
+p{color:#c9cffa;margin-bottom:14px}
+section{display:none}section.on{display:block}
+.grid{display:grid;gap:10px;margin-top:18px}
+.mode{display:block;width:100%;text-align:left;background:var(--card);color:var(--ink);border:0;border-radius:14px;padding:14px 16px;font:inherit;cursor:pointer;transition:transform .12s}
+.mode:hover{transform:translateY(-3px)}
+.mode b{font:800 1.1rem 'Bricolage Grotesque';display:block}.mode small{color:#5a629c}
+.mode.mp{background:var(--sun)}
+.btn,.ghost{font:600 1rem 'DM Sans';border:0;border-radius:12px;padding:12px 18px;cursor:pointer}
+.btn{background:var(--sun);color:var(--ink)}.ghost{background:transparent;color:#fff;border:2px solid #ffffff44}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+select,input{font:inherit;padding:12px;border-radius:12px;border:0;width:100%;color:var(--ink)}
+.hud{display:flex;justify-content:space-between;align-items:center;font-weight:600;margin-bottom:12px;gap:8px}
+.hud div{background:#ffffff1f;border-radius:10px;padding:6px 12px}
+#tm{font:800 1.4rem 'Bricolage Grotesque';background:var(--sun);color:var(--ink)}#tm.low{background:var(--bad);color:#fff}
+#q{display:flex;justify-content:center;margin:18px 0}
+.flag{--r:7px;background:#fff;padding:14px;width:min(100%,360px);-webkit-mask:radial-gradient(circle var(--r),#0000 98%,#000) -7px -7px/14px 14px;mask:radial-gradient(circle var(--r),#0000 98%,#000) -7px -7px/14px 14px;filter:drop-shadow(0 10px 18px #0006)}
+.flag img{display:block;width:100%;aspect-ratio:3/2;object-fit:contain;background:#e9ebff}
+#q{transition:transform .2s}#q.bad{animation:sk .3s}#q.ok{animation:pp .3s}
+@keyframes sk{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+@keyframes pp{50%{transform:scale(1.06)}}
+.cn{font-size:clamp(2rem,9vw,3rem);text-align:center;padding:14px;background:var(--sun);color:var(--ink);border-radius:16px;width:100%}
+#inp{position:relative}
+#ac{list-style:none;padding:0;position:absolute;left:0;right:0;bottom:100%;margin-bottom:6px;background:#fff;color:var(--ink);border-radius:12px;max-height:190px;overflow:auto;box-shadow:0 8px 24px #0006;z-index:5}
+#ac li{padding:9px 14px;cursor:pointer}#ac li:hover,#ac li.s{background:var(--sun)}
+#opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#opts button{background:#fff;border:3px solid transparent;border-radius:12px;padding:8px;cursor:pointer}#opts button:hover{border-color:var(--sun)}
+#opts img{width:100%;aspect-ratio:3/2;object-fit:contain;display:block}
+.big{font-size:5rem;color:var(--sun);line-height:1}
+.miss{color:#c9cffa;font-size:.9rem;margin:10px 0}
+#cd{position:fixed;inset:0;background:#0d1450ee;display:none;align-items:center;justify-content:center;font:800 9rem 'Bricolage Grotesque';color:var(--sun);z-index:9}
+#msg{color:var(--sun);min-height:1.4em;margin-top:8px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body><div id="app">
+<div id="cd"></div>
+<section id="menu" class="on">
+<h1>Flagi <span>Europy</span></h1><p>Ile flag znasz? Zagraj sam albo zmierz się ze znajomym.</p>
+<div class="grid">
+<button class="mode" onclick="setup('challenge')"><b>Wyzwanie</b><small>10 losowych flag, wybierasz poziom trudności</small></button>
+<button class="mode" onclick="setup('all')"><b>Wszystkie flagi</b><small>Zgaduj albo pomijaj, na końcu zobaczysz wynik</small></button>
+<button class="mode" onclick="setup('choice')"><b>Wybierz flagę</b><small>Nazwa kraju i 4 flagi do wyboru</small></button>
+<button class="mode mp" onclick="lobby()"><b>Pojedynek online</b><small>Dwóch graczy, te same flagi, wyścig na punkty</small></button>
+</div></section>
+<section id="setup"></section>
+<section id="lobby"></section>
+<section id="game">
+<div class="hud"><div id="sc"></div><div id="tm"></div><div id="op"></div></div>
+<div id="q"></div>
+<div id="opts"></div>
+<div id="inp"><ul id="ac"></ul><input id="in" autocomplete="off" placeholder="Wpisz nazwę kraju, np. K…" aria-label="Nazwa kraju">
+<div class="row"><button class="btn" onclick="go()">Zatwierdź</button><button class="ghost" id="skipb" onclick="skip()">Pomiń</button><button class="ghost" id="endb" onclick="end()">Zakończ</button></div></div>
+</section>
+<section id="res"></section>
+</div>
+<script>
+const WS_URL='ws://localhost:3000'; // po wdrożeniu serwera wpisz np. 'wss://twoja-aplikacja.onrender.com'
+const C="al|Albania|3,ad|Andora|3,at|Austria|1,by|Białoruś|2,be|Belgia|1,ba|Bośnia i Hercegowina|3,bg|Bułgaria|2,hr|Chorwacja|1,cy|Cypr|3,cz|Czechy|1,dk|Dania|1,ee|Estonia|2,fi|Finlandia|1,fr|Francja|1,gr|Grecja|1,es|Hiszpania|1,nl|Holandia|1,ie|Irlandia|1,is|Islandia|2,li|Liechtenstein|3,lt|Litwa|2,lu|Luksemburg|2,lv|Łotwa|2,mk|Macedonia Północna|3,mt|Malta|3,md|Mołdawia|3,mc|Monako|3,me|Czarnogóra|3,de|Niemcy|1,no|Norwegia|1,pl|Polska|1,pt|Portugalia|1,ru|Rosja|1,ro|Rumunia|2,sm|San Marino|3,rs|Serbia|2,sk|Słowacja|1,si|Słowenia|2,ch|Szwajcaria|1,se|Szwecja|1,ua|Ukraina|1,va|Watykan|3,hu|Węgry|1,gb|Wielka Brytania|1,it|Włochy|1,xk|Kosowo|3".split(',').map(s=>{const[c,n,d]=s.split('|');return{c,n,d:+d}});
+const $=id=>document.getElementById(id),byC=c=>C.find(x=>x.c==c);
+const N=s=>s.toLowerCase().replace(/ł/g,'l').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+const sh=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const fl=c=>`https://flagcdn.com/w320/${c}.png`;
+const show=id=>document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==id));
+let G=null,tm=null,ws=null,opp={s:0,d:0},sel=-1,list=[];
+
+/* ---------- tryby solo ---------- */
+function setup(mode){
+ const t={challenge:'Wyzwanie: 10 flag',all:'Wszystkie flagi',choice:'Wybierz flagę'}[mode];
+ $('setup').innerHTML=`<h2>${t}</h2><p>Wybierz poziom trudności.</p><div class="grid">${['Łatwy|największe kraje','Średni|dochodzą mniej oczywiste','Trudny|wszystkie, także mikropaństwa'].map((l,i)=>{const[a,b]=l.split('|');return`<button class="mode" onclick="single('${mode}',${i+1})"><b>${a}</b><small>${b}</small></button>`}).join('')}</div><div class="row"><button class="ghost" onclick="show('menu')">Wróć</button></div>`;show('setup')}
+function single(mode,l){
+ const pool=C.filter(x=>l==3||x.d<=l),seq=sh(pool).map(x=>x.c);
+ begin({mode,pool,seq:mode=='all'?seq:seq.slice(0,10),mp:0,total:0})}
+
+/* ---------- silnik gry ---------- */
+function begin(o){
+ G={...o,kind:o.mode=='choice'?'choice':'type',i:0,score:0,miss:[],el:0,tl:o.total||0,end:0};
+ opp={s:0,d:0};show('game');
+ $('inp').style.display=G.kind=='type'?'block':'none';$('opts').style.display=G.kind=='choice'?'grid':'none';
+ $('skipb').style.display=G.mode=='shrink'||G.kind=='type'?'':'none';
+ $('endb').style.display=G.mode=='all'?'':'none';
+ clearInterval(tm);tm=setInterval(tick,100);nextQ();hud()}
+function nextQ(){
+ if(G.i>=G.seq.length)return end();
+ const c=G.seq[G.i];G.cur=byC(c);
+ if(G.mode=='shrink')G.qt=Math.max(30,150-G.i*10);
+ if(G.kind=='type'){$('q').innerHTML=`<div class="flag"><img src="${fl(c)}" alt="Flaga"></div>`;$('in').value='';list=[];drawAc();$('in').focus()}
+ else{$('q').innerHTML=`<div class="cn">${G.cur.n}</div>`;
+  const o=sh([c,...sh(G.pool.filter(x=>x.c!=c)).slice(0,3).map(x=>x.c)]);
+  $('opts').innerHTML=o.map(k=>`<button onclick="pickFlag('${k}')" aria-label="Flaga"><img src="${fl(k)}" alt=""></button>`).join('')}
+ hud()}
+function tick(){
+ if(!G||G.end)return;G.el++;
+ if(G.total){G.tl--;if(G.tl<=0)return end()}
+ if(G.mode=='shrink'){G.qt--;if(G.qt<=0)return end()}
+ hud()}
+const fmt=t=>{t=Math.max(0,Math.floor(t/10));return(t/60|0)+':'+String(t%60).padStart(2,'0')};
+function hud(){
+ if(!G)return;$('sc').textContent='Punkty: '+G.score;
+ const t=G.mode=='shrink'?(Math.max(0,G.qt)/10).toFixed(1)+' s':G.total?fmt(G.tl):fmt(G.el);
+ $('tm').textContent=t;$('tm').classList.toggle('low',(G.mode=='shrink'&&G.qt<30)||(G.total&&G.tl<100));
+ $('op').style.display=G.mp?'':'none';$('op').textContent='Rywal: '+opp.s+(opp.d?' ✓':'')}
+function flash(k){const q=$('q');q.classList.remove('ok','bad');void q.offsetWidth;q.classList.add(k)}
+function ans(ok){
+ if(G.end)return;
+ if(ok){G.score++;sync();flash('ok');G.i++;nextQ()}
+ else{flash('bad');
+  if(G.mode=='shrink')return end();
+  if(G.mp&&G.total){G.tl-=30;if(G.tl<=0)return end()}
+  if(G.kind=='choice'){G.miss.push(G.cur.n);G.i++;nextQ()}}
+ hud()}
+function skip(){
+ if(G.end||G.kind!='type')return;
+ G.miss.push(G.cur.n);if(G.mp&&G.total){G.tl-=50;if(G.tl<=0)return end()}
+ G.i++;nextQ()}
+function pickFlag(k){ans(k==G.cur.c)}
+function end(){
+ if(G.end)return;G.end=1;clearInterval(tm);
+ if(G.mp)send({t:'p',s:G.score,d:1});result()}
+
+/* ---------- autouzupełnianie ---------- */
+const inp=$('in');
+inp.oninput=()=>{const v=N(inp.value);list=v?C.filter(x=>N(x.n).startsWith(v)):[];sel=-1;drawAc()};
+function drawAc(){$('ac').innerHTML=list.map((x,i)=>`<li class="${i==sel?'s':''}" onmousedown="pick(${i})">${x.n}</li>`).join('');$('ac').style.display=list.length?'block':'none'}
+inp.onkeydown=e=>{
+ if(e.key=='ArrowDown'){sel=Math.min(sel+1,list.length-1);drawAc();e.preventDefault()}
+ else if(e.key=='ArrowUp'){sel=Math.max(sel-1,-1);drawAc();e.preventDefault()}
+ else if(e.key=='Enter')go();
+ else if(e.key=='Tab'&&list[0]){inp.value=list[Math.max(sel,0)].n;e.preventDefault()}};
+function pick(i){inp.value=list[i].n;go()}
+function go(){
+ if(!G||G.end||G.kind!='type')return;
+ const v=list[sel]?list[sel].n:inp.value;if(!v.trim())return;
+ const ok=N(v)==N(G.cur.n);inp.value='';list=[];drawAc();ans(ok)}
+
+/* ---------- wynik ---------- */
+function result(){
+ let h=`<h2>${G.mp?'Koniec rundy':'Twój wynik'}</h2><div class="big">${G.score}${G.mp?'':'<small style="font-size:2rem"> / '+G.seq.length+'</small>'}</div>`;
+ if(G.mp){
+  if(!opp.d)h+=`<p>Czekam, aż rywal skończy… (jego wynik: ${opp.s})</p>`;
+  else h+=`<h2>${G.score>opp.s?'Wygrywasz! 🏆':G.score<opp.s?'Rywal wygrywa':'Remis'}</h2><p>Ty ${G.score} : ${opp.s} rywal</p>`}
+ if(G.miss.length)h+=`<p class="miss">Pominięte lub błędne: ${G.miss.join(', ')}</p>`;
+ h+=`<div class="row">${G.mp?'':`<button class="btn" onclick="begin({mode:G.mode,pool:G.pool,seq:sh(G.pool).map(x=>x.c).slice(0,G.mode=='all'?99:10),mp:0,total:0})">Jeszcze raz</button>`}<button class="ghost" onclick="location.reload()">Menu</button></div>`;
+ $('res').innerHTML=h;show('res')}
+
+/* ---------- multiplayer ---------- */
+const send=o=>ws&&ws.readyState==1&&ws.send(JSON.stringify(o));
+const sync=()=>G.mp&&send({t:'p',s:G.score,d:0});
+function lobby(){
+ $('lobby').innerHTML=`<h2>Pojedynek online</h2><p>Jeden gracz tworzy pokój i podaje kod drugiemu.</p>
+ <label>Tryb</label><select id="lm"><option value="blitz">Na czas: więcej flag niż rywal</option><option value="shrink">Coraz szybciej: każde pytanie krótsze</option><option value="choice">Wybór 1 z 4 na czas</option></select>
+ <div style="height:8px"></div><label>Czas gry (tryby na czas)</label><select id="ld"><option value="60">1 minuta</option><option value="120" selected>2 minuty</option><option value="180">3 minuty</option></select>
+ <div class="row"><button class="btn" onclick="create()">Utwórz pokój</button></div>
+ <label>Masz kod?</label><div class="row"><input id="lc" placeholder="KOD" maxlength="4" style="width:120px;text-transform:uppercase"><button class="btn" onclick="join()">Dołącz</button></div>
+ <div id="msg"></div><div class="row"><button class="ghost" onclick="location.reload()">Wróć</button></div>`;show('lobby')}
+const msg=t=>{const m=$('msg');if(m)m.textContent=t};
+function conn(cb){
+ msg('Łączenie z serwerem…');ws=new WebSocket(WS_URL);ws.onopen=cb;
+ ws.onmessage=e=>on(JSON.parse(e.data));
+ ws.onerror=()=>msg('Nie mogę połączyć się z serwerem.');
+ ws.onclose=()=>{if(G&&G.mp&&!G.end){msg('Połączenie przerwane.');end()}}}
+const create=()=>conn(()=>send({t:'create'}));
+const join=()=>conn(()=>send({t:'join',code:$('lc').value}));
+function on(m){
+ if(m.t=='room')msg('Kod pokoju: '+m.code+'. Czekam na drugiego gracza…');
+ if(m.t=='err')msg(m.m);
+ if(m.t=='joined')msg('Dołączono. Czekam, aż gospodarz zacznie grę…');
+ if(m.t=='ready'){msg('Rywal dołączył!');$('msg').insertAdjacentHTML('afterend','<div class="row"><button class="btn" onclick="send({t:\'go\',mode:$(\'lm\').value,dur:+$(\'ld\').value})">Start</button></div>')}
+ if(m.t=='start'){let n=3;const cd=$('cd');cd.style.display='flex';cd.textContent=n;
+  const iv=setInterval(()=>{n--;if(n>0)cd.textContent=n;else{clearInterval(iv);cd.style.display='none';
+   begin({mode:m.mode,pool:C,seq:m.seq,mp:1,total:m.mode=='shrink'?0:m.dur*10})}},1000)}
+ if(m.t=='opp'){opp={s:m.s,d:m.d};hud();if(G&&G.end)result()}
+ if(m.t=='left'){msg('Rywal opuścił grę.');if(G&&!G.end){opp.d=1;end()}}}
+</script></body></html>
