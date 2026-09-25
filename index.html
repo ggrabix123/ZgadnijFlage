@@ -65,15 +65,20 @@ select,input{font:inherit;padding:12px;border-radius:12px;border:0;width:100%;co
 </section>
 <section id="res"></section>
 </div>
+<script src="https://unpkg.com/@metered-ca/realtime@1/dist/index.umd.js"></script>
 <script>
-const WS_URL='ws://localhost:3000'; // po wdrożeniu serwera wpisz np. 'wss://twoja-aplikacja.onrender.com'
+/* ====== KONFIGURACJA Metered ====== */
+// dashboard.metered.ca -> Realtime Messaging -> Keys -> Create key -> typ "Publishable".
+// Przy tworzeniu klucza zaznacz "Send" (domyślnie wyłączone) - inaczej gracze się połączą, ale wiadomości nie polecą.
+const PK_KEY = "pk_live_TWOJ_KLUCZ";
+
 const C="al|Albania|3,ad|Andora|3,at|Austria|1,by|Białoruś|2,be|Belgia|1,ba|Bośnia i Hercegowina|3,bg|Bułgaria|2,hr|Chorwacja|1,cy|Cypr|3,cz|Czechy|1,dk|Dania|1,ee|Estonia|2,fi|Finlandia|1,fr|Francja|1,gr|Grecja|1,es|Hiszpania|1,nl|Holandia|1,ie|Irlandia|1,is|Islandia|2,li|Liechtenstein|3,lt|Litwa|2,lu|Luksemburg|2,lv|Łotwa|2,mk|Macedonia Północna|3,mt|Malta|3,md|Mołdawia|3,mc|Monako|3,me|Czarnogóra|3,de|Niemcy|1,no|Norwegia|1,pl|Polska|1,pt|Portugalia|1,ru|Rosja|1,ro|Rumunia|2,sm|San Marino|3,rs|Serbia|2,sk|Słowacja|1,si|Słowenia|2,ch|Szwajcaria|1,se|Szwecja|1,ua|Ukraina|1,va|Watykan|3,hu|Węgry|1,gb|Wielka Brytania|1,it|Włochy|1,xk|Kosowo|3".split(',').map(s=>{const[c,n,d]=s.split('|');return{c,n,d:+d}});
 const $=id=>document.getElementById(id),byC=c=>C.find(x=>x.c==c);
 const N=s=>s.toLowerCase().replace(/ł/g,'l').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
 const sh=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 const fl=c=>`https://flagcdn.com/w320/${c}.png`;
 const show=id=>document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==id));
-let G=null,tm=null,ws=null,opp={s:0,d:0},sel=-1,list=[];
+let G=null,tm=null,opp={s:0,d:0},sel=-1,list=[];
 
 /* ---------- tryby solo ---------- */
 function setup(mode){
@@ -154,32 +159,43 @@ function result(){
  h+=`<div class="row">${G.mp?'':`<button class="btn" onclick="begin({mode:G.mode,pool:G.pool,seq:sh(G.pool).map(x=>x.c).slice(0,G.mode=='all'?99:10),mp:0,total:0})">Jeszcze raz</button>`}<button class="ghost" onclick="location.reload()">Menu</button></div>`;
  $('res').innerHTML=h;show('res')}
 
-/* ---------- multiplayer ---------- */
-const send=o=>ws&&ws.readyState==1&&ws.send(JSON.stringify(o));
-const sync=()=>G.mp&&send({t:'p',s:G.score,d:0});
+/* ================= MULTIPLAYER: samo Metered Realtime, bez własnego serwera ================= */
+const { MeteredPeer } = window.MeteredPeer;
+let peer=null,isHost=false;
+const msg=t=>{const m=$('msg');if(m)m.textContent=t};
+const code4=()=>Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
+
 function lobby(){
  $('lobby').innerHTML=`<h2>Pojedynek online</h2><p>Jeden gracz tworzy pokój i podaje kod drugiemu.</p>
  <label>Tryb</label><select id="lm"><option value="blitz">Na czas: więcej flag niż rywal</option><option value="shrink">Coraz szybciej: każde pytanie krótsze</option><option value="choice">Wybór 1 z 4 na czas</option></select>
  <div style="height:8px"></div><label>Czas gry (tryby na czas)</label><select id="ld"><option value="60">1 minuta</option><option value="120" selected>2 minuty</option><option value="180">3 minuty</option></select>
- <div class="row"><button class="btn" onclick="create()">Utwórz pokój</button></div>
- <label>Masz kod?</label><div class="row"><input id="lc" placeholder="KOD" maxlength="4" style="width:120px;text-transform:uppercase"><button class="btn" onclick="join()">Dołącz</button></div>
+ <div class="row"><button class="btn" onclick="createRoom()">Utwórz pokój</button></div>
+ <label>Masz kod?</label><div class="row"><input id="lc" placeholder="KOD" maxlength="4" style="width:120px;text-transform:uppercase"><button class="btn" onclick="joinRoom()">Dołącz</button></div>
  <div id="msg"></div><div class="row"><button class="ghost" onclick="location.reload()">Wróć</button></div>`;show('lobby')}
-const msg=t=>{const m=$('msg');if(m)m.textContent=t};
-function conn(cb){
- msg('Łączenie z serwerem…');ws=new WebSocket(WS_URL);ws.onopen=cb;
- ws.onmessage=e=>on(JSON.parse(e.data));
- ws.onerror=()=>msg('Nie mogę połączyć się z serwerem.');
- ws.onclose=()=>{if(G&&G.mp&&!G.end){msg('Połączenie przerwane.');end()}}}
-const create=()=>conn(()=>send({t:'create'}));
-const join=()=>conn(()=>send({t:'join',code:$('lc').value}));
-function on(m){
- if(m.t=='room')msg('Kod pokoju: '+m.code+'. Czekam na drugiego gracza…');
- if(m.t=='err')msg(m.m);
- if(m.t=='joined')msg('Dołączono. Czekam, aż gospodarz zacznie grę…');
- if(m.t=='ready'){msg('Rywal dołączył!');$('msg').insertAdjacentHTML('afterend','<div class="row"><button class="btn" onclick="send({t:\'go\',mode:$(\'lm\').value,dur:+$(\'ld\').value})">Start</button></div>')}
- if(m.t=='start'){let n=3;const cd=$('cd');cd.style.display='flex';cd.textContent=n;
-  const iv=setInterval(()=>{n--;if(n>0)cd.textContent=n;else{clearInterval(iv);cd.style.display='none';
-   begin({mode:m.mode,pool:C,seq:m.seq,mp:1,total:m.mode=='shrink'?0:m.dur*10})}},1000)}
- if(m.t=='opp'){opp={s:m.s,d:m.d};hud();if(G&&G.end)result()}
- if(m.t=='left'){msg('Rywal opuścił grę.');if(G&&!G.end){opp.d=1;end()}}}
+
+function connectPeer(code,creator){
+ isHost=creator;
+ peer=new MeteredPeer({apiKey:PK_KEY});
+ peer.on('peer-joined',()=>{
+  if(isHost){msg('Rywal dołączył!');$('msg').insertAdjacentHTML('afterend','<div class="row"><button class="btn" onclick="hostStart()">Start</button></div>')}
+  else msg('Połączono. Czekam, aż gospodarz zacznie grę…')});
+ peer.on('peer-left',()=>{msg('Rywal opuścił grę.');if(G&&!G.end){opp.d=1;end()}});
+ peer.on('data',({data})=>on(data));
+ peer.join(code).catch(()=>msg('Nie udało się połączyć - sprawdź klucz API Metered.'))}
+function createRoom(){const c=code4();msg('Kod pokoju: '+c+'. Czekam na drugiego gracza…');connectPeer(c,true)}
+function joinRoom(){const c=($('lc').value||'').trim().toUpperCase();if(!c)return;msg('Łączenie…');connectPeer(c,false)}
+
+function hostStart(){
+ const mode=$('lm').value,dur=+$('ld').value,seq=sh(C.map(x=>x.c));
+ send({t:'start',mode,dur,seq});countdown(mode,dur,seq)}
+function countdown(mode,dur,seq){
+ let n=3;const cd=$('cd');cd.style.display='flex';cd.textContent=n;
+ const iv=setInterval(()=>{n--;if(n>0)cd.textContent=n;else{clearInterval(iv);cd.style.display='none';
+  begin({mode,pool:C,seq,mp:1,total:mode=='shrink'?0:dur*10})}},1000)}
+
+const send=o=>peer&&peer.send(o).catch(()=>{});
+const sync=()=>G.mp&&send({t:'p',s:G.score,d:0});
+function on(data){
+ if(data.t=='start')countdown(data.mode,data.dur,data.seq);
+ if(data.t=='p'){opp={s:data.s,d:data.d};hud();if(G&&G.end)result()}}
 </script></body></html>
